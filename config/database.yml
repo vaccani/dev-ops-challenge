@@ -2,7 +2,7 @@ default: &default
   adapter: postgresql
   encoding: unicode
   pool: 5
-  host: mybus-tracker-postgresql
+  host: YOUR_DATABASE_HOST
   username: admin
   password: admin
 
