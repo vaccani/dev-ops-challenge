@@ -1,28 +1,42 @@
-== README
+== DevOps challenge
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+First of all thanks for being part of this process :)
+We are going to provide you with a user and credentials in order to complete this challenge with a real AWS account.
 
-Things you may want to cover:
+== Entering the Matrix.
 
-* Ruby version
+Hello NEO.
 
-* System dependencies
+We have a Rails application that says Hello world! But is becoming really popular.
+Our old infrastructure run in EC2 machines but the maintenance of this is really hard for us.
+We hear that we can use containers in order to build and ship our application in a fast and safe way.
 
-* Configuration
+You should choose between two pills:
 
-* Database creation
+[The red pill]: You can take the control of the Matrix and run the containers under self managed EC2 instances.
 
-* Database initialization
+[The blue pill]: You take this and you wake up using Fargate.
 
-* How to run the test suite
+Please explain the reason for your decision.
+After you take a choice, please complete the following tasks.
 
-* Services (job queues, cache servers, search engines, etc.)
+1. Create the infrastructure and the pipeline needed in order to serve our application from ECS containers.
+2. Host our database in REDS and import the current data (/db/database.sql).
+3. Create a script that easy deploy new code to the stack.
+4. Set autoscaling policies in order to have a minimum of 1 task, a desired of 1, and a maximum of 10 based on the CPU usage.
 
-* Deployment instructions
+== Application details:
 
-* ...
+* Ruby version: 2.2
+* Rails version: 4.2
+* Postgres version :9.5
 
+Database configuration: config/database.yml
+Update your host.
+username: admin
+password: admin
+db name: hello_world
 
-Please feel free to use a different markup language if you do not plan to run
-<tt>rake doc:app</tt>.
+== Test your results
+Is everithing is ok the route /hello_world will return the following respose:
+{"id":1,"text":"Hello World!"}
