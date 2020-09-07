@@ -1,9 +1,9 @@
-== DevOps challenge
+## DevOps challenge
 
 First of all thanks for being part of this process :)
 We are going to provide you with a user and credentials in order to complete this challenge with a real AWS account.
 
-== Entering the Matrix.
+## Entering the Matrix.
 
 Hello NEO.
 
@@ -25,11 +25,11 @@ After you take a choice, please complete the following tasks.
 3. Create a script that easy deploy new code to the stack.
 4. Set autoscaling policies in order to have a minimum of 1 task, a desired of 1, and a maximum of 10 based on the CPU usage.
 
-== Application details:
+## Application details:
 
 * Ruby version: 2.2
 * Rails version: 4.2
-* Postgres version :9.5
+* Postgres version :11.6
 
 Database configuration: config/database.yml
 Update your host.
@@ -37,6 +37,7 @@ username: admin
 password: admin
 db name: hello_world
 
-== Test your results
+## Test your results
+
 Is everithing is ok the route /hello_world will return the following respose:
 {"id":1,"text":"Hello World!"}
