@@ -1,7 +1,6 @@
 ## DevOps challenge
 
 First of all thanks for being part of this process :)
-We are going to provide you with a user and credentials in order to complete this challenge with a real AWS account.
 
 ## Entering the Matrix.
 
