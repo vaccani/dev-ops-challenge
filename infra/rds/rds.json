@@ -1,0 +1,30 @@
+[
+    {
+      "ParameterKey": "Environment",
+      "ParameterValue": "dev"
+    },
+    {
+      "ParameterKey": "DBAllocatedStorage",
+      "ParameterValue": "50"
+    },
+    {
+      "ParameterKey": "DBMultiAZ",
+      "ParameterValue": "false"
+    },
+    {
+      "ParameterKey": "EngineVersion",
+      "ParameterValue": "11.6"
+    },
+    {
+      "ParameterKey": "DBClass",
+      "ParameterValue": "db.t2.micro"
+    },
+    {
+      "ParameterKey": "DBUsername",
+      "ParameterValue": "admin1234"
+    },
+    {
+      "ParameterKey": "DBUserPassword",
+      "ParameterValue": "admin1234"
+    }
+]

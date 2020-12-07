@@ -2,9 +2,10 @@ default: &default
   adapter: postgresql
   encoding: unicode
   pool: 5
-  host: YOUR_DATABASE_HOST
-  username: admin
-  password: admin
+  host: $db_endpoint 
+  port: 5432
+  username: admin1234
+  password: admin1234
 
 development:
   <<: *default

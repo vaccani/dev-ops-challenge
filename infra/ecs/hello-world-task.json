@@ -1,0 +1,18 @@
+[
+  {
+    "ParameterKey": "appName",
+    "ParameterValue": "hello-ruby"
+  },
+  {
+    "ParameterKey": "Cpu",
+    "ParameterValue": "256"
+  },
+  {
+    "ParameterKey": "Memory",
+    "ParameterValue": "512"
+  },
+  {
+    "ParameterKey": "ContainerPort",
+    "ParameterValue": "3000"
+  }
+]

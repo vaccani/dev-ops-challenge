@@ -1,0 +1,34 @@
+[
+  {
+    "ParameterKey": "Environment",
+    "ParameterValue": "dev"
+  },
+  {
+    "ParameterKey": "Owner",
+    "ParameterValue": "leo"
+  },
+  {
+    "ParameterKey": "Project",
+    "ParameterValue": "devops challenge"
+  },
+  {
+    "ParameterKey": "OsType",
+    "ParameterValue": "amazon"
+  },
+  {
+    "ParameterKey": "Ec2KeyPair",
+    "ParameterValue": "leo-ssh-keypair"
+  },
+  {
+    "ParameterKey": "InstanceType",
+    "ParameterValue": "t2.micro"
+  },
+  {
+    "ParameterKey": "PolicyName",
+    "ParameterValue": "dev-bastionRole"
+  },
+  {
+    "ParameterKey": "AMIAmazon",
+    "ParameterValue": "ami-04d29b6f966df1537"
+  }
+]

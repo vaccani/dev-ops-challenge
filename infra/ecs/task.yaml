@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: container on ecs cluster for devops challenge
+
+Parameters:
+  appName:
+    Type: String
+  Cpu:
+    Type: Number
+  Memory:
+    Type: Number
+  ContainerPort:
+    Type: Number
+  # dbUser:
+  #   Type: String
+  # dbPwd:
+  #   Type: String
+  # dbName:
+  #   Type: String
+
+Resources:
+  
+  Task:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref appName
+      Cpu: !Ref Cpu
+      Memory: !Ref Memory
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
+      ContainerDefinitions:
+        - Name: !Ref appName
+          Image: 
+            !Join ["", [ !Ref "AWS::AccountId", ".dkr.ecr.", !Ref "AWS::Region", ".amazonaws.com/", !Ref "appName", ":v1"]]
+
+          Cpu: !Ref Cpu
+          Memory: !Ref Memory
+          # Environment:
+          #   - Name: DB_USER
+          #     Value: !Ref dbUser
+          #   - Name: DB_PASSWD
+          #     Value: !Ref dbPwd
+          #   - Name: DB_NAME
+          #     Value: !Ref dbName
+          #   - Name: DB_HOST
+          #     Value: leo-dev-pg-db.cbyraogrkmg1.us-east-1.rds.amazonaws.com
+          
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+              Protocol: tcp
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: 'apis'
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Ref appName
+ 
+
+  Service:
+    Type: AWS::ECS::Service
+    DependsOn: ListenerRule
+    Properties:
+      ServiceName: !Ref appName
+      TaskDefinition: !Ref Task
+      Cluster: !ImportValue 'ECSCluster'
+      LaunchType: FARGATE
+      DesiredCount: 1
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 70
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets:
+            - !ImportValue leo-Subnet1
+            - !ImportValue leo-Subnet2
+          SecurityGroups:
+            - !ImportValue ContainerSecurityGroup
+            - !ImportValue hello-rds-DBSecurityGroup
+      LoadBalancers:
+        - ContainerName: !Ref appName
+          ContainerPort: !Ref ContainerPort
+          TargetGroupArn: !Ref TargetGroup
+
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name:
+        !Join ["-", [ !Ref "appName", "tg"]]
+      VpcId: !ImportValue leo-VPC
+      Port: 80
+      Protocol: HTTP
+      Matcher:
+        HttpCode: 200-299
+      HealthCheckIntervalSeconds: 100
+      HealthCheckPath: /hello_world
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 50
+      HealthyThresholdCount: 10
+      TargetType: ip
+
+  ListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !ImportValue Listener
+      Priority: 2
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - /hello_world
+      Actions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+
+
+Outputs:
+
+  ApiEndpoint:
+    Description: Hello World Endpoint
+    Value: !Join ['', ['http://', !ImportValue DomainName, '/hello_world']]
+    Export:
+      Name: 'HelloWorldEndpoint'
