@@ -8,6 +8,10 @@ Parameters:
     Type: Number
   Memory:
     Type: Number
+  MaxCount:
+    Type: Number
+  DesiredCount:
+    Type: Number
   ContainerPort:
     Type: Number
   # dbUser:
@@ -36,15 +40,15 @@ Resources:
 
           Cpu: !Ref Cpu
           Memory: !Ref Memory
-          # Environment:
+          Environment:
           #   - Name: DB_USER
           #     Value: !Ref dbUser
           #   - Name: DB_PASSWD
           #     Value: !Ref dbPwd
           #   - Name: DB_NAME
           #     Value: !Ref dbName
-          #   - Name: DB_HOST
-          #     Value: leo-dev-pg-db.cbyraogrkmg1.us-east-1.rds.amazonaws.com
+              - Name: DB_HOST
+                Value: !ImportValue hello-rds-Endpoint
           
           PortMappings:
             - ContainerPort: !Ref ContainerPort
@@ -65,7 +69,7 @@ Resources:
       TaskDefinition: !Ref Task
       Cluster: !ImportValue 'ECSCluster'
       LaunchType: FARGATE
-      DesiredCount: 1
+      DesiredCount: !Ref DesiredCount
       DeploymentConfiguration:
         MaximumPercent: 200
         MinimumHealthyPercent: 70
@@ -94,10 +98,10 @@ Resources:
       Protocol: HTTP
       Matcher:
         HttpCode: 200-299
-      HealthCheckIntervalSeconds: 100
+      HealthCheckIntervalSeconds: 10
       HealthCheckPath: /hello_world
       HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 50
+      HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 10
       TargetType: ip
 
@@ -113,6 +117,96 @@ Resources:
       Actions:
         - TargetGroupArn: !Ref TargetGroup
           Type: forward
+
+  CloudWatchLogsGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Ref AWS::StackName
+      RetentionInDays: 365
+
+  # Autoscaling
+
+  ServiceScalableTarget:
+    Type: "AWS::ApplicationAutoScaling::ScalableTarget"
+    Properties:
+      MaxCapacity: !Ref MaxCount
+      MinCapacity: !Ref DesiredCount
+      ResourceId: !Join
+        - /
+        - - service
+          - !ImportValue 'ECSCluster'
+          - !GetAtt Service.Name
+      RoleARN: !ImportValue ECSTaskExecutionRole
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+
+  ServiceScaleOutPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: ServiceScaleOutPolicy
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref ServiceScalableTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 1800
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalLowerBound: 0
+            ScalingAdjustment: 1
+
+  ServiceScaleInPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: ServiceScaleInPolicy
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref ServiceScalableTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 1800
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalUpperBound: 0
+            ScalingAdjustment: -1
+
+  CPUScaleOutAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: CPU utilization greater than 90%
+      AlarmDescription: Alarm if cpu utilization greater than 90% of reserved cpu
+      Namespace: AWS/ECS
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: ClusterName
+          Value: !ImportValue 'ECSCluster'
+        - Name: ServiceName
+          Value: !GetAtt Service.Name
+      Statistic: Maximum
+      Period: "60"
+      EvaluationPeriods: "3"
+      Threshold: "90"
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref ServiceScaleOutPolicy
+
+  CPUScaleInAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: CPU utilization less than 70%
+      AlarmDescription: Alarm if cpu utilization greater than 70% of reserved cpu
+      Namespace: AWS/ECS
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: ClusterName
+          Value: !ImportValue 'ECSCluster'
+        - Name: ServiceName
+          Value: !GetAtt Service.Name
+      Statistic: Maximum
+      Period: "60"
+      EvaluationPeriods: "10"
+      Threshold: "70"
+      ComparisonOperator: LessThanThreshold
+      AlarmActions:
+        - !Ref ServiceScaleInPolicy
 
 
 Outputs:

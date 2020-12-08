@@ -27,6 +27,17 @@ Resources:
                 # ECS tasks to upload logs to CloudWatch
                 - 'logs:CreateLogStream'
                 - 'logs:PutLogEvents'
+                # Load balancer and autoscaling
+                - 'ec2:AuthorizeSecurityGroupIngress'
+                - 'ec2:Describe*'
+                - 'elasticloadbalancing:DeregisterInstancesFromLoadBalancer'
+                - 'elasticloadbalancing:Describe*'
+                - 'elasticloadbalancing:RegisterInstancesWithLoadBalancer'
+                - 'elasticloadbalancing:DeregisterTargets'
+                - 'elasticloadbalancing:DescribeTargetGroups'
+                - 'elasticloadbalancing:DescribeTargetHealth'
+                - 'elasticloadbalancing:RegisterTargets'
+
               Resource: '*'
 
 Outputs:

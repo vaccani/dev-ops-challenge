@@ -31,10 +31,6 @@ aws cloudformation wait stack-delete-complete --stack-name leo-vpc
 
 aws ecr delete-repository --repository-name hello-ruby --force
 
-export $db_endpoint=db_endpoint
-
-sed -i "s/\$db_endpoint/$db_endpoint/g" config/database.yml
-
-aws s3 rb s3://challenge-leo-1234 --force
+aws s3 rb s3://challenge-leo-12345 --force
 
 echo "DONE"

@@ -12,6 +12,14 @@
     "ParameterValue": "512"
   },
   {
+    "ParameterKey": "MaxCount",
+    "ParameterValue": "10"
+  },
+  {
+    "ParameterKey": "DesiredCount",
+    "ParameterValue": "1"
+  },
+  {
     "ParameterKey": "ContainerPort",
     "ParameterValue": "3000"
   }

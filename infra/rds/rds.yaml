@@ -126,3 +126,8 @@ Outputs :
                       - "/hello_world"
     Export:
       Name: !Sub "${AWS::StackName}-JDBC"
+  DBEndpoint:
+    Description: RDS Endpoint
+    Value: !GetAtt  PostgresDB.Endpoint.Address
+    Export:
+      Name: !Sub "${AWS::StackName}-Endpoint"

@@ -180,7 +180,7 @@ Resources:
 
           #Get database.sql file
 
-          aws s3 cp s3://challenge-leo-1234/database.sql ./
+          aws s3 cp s3://challenge-leo-12345/database.sql ./
 
 
 

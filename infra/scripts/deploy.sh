@@ -2,7 +2,7 @@
 
 # Build Docker image
 
-# sudo docker build -t hello-ruby .
+docker build -t hello-ruby .
 
 
 # Push hello-ruby Docker image
@@ -16,7 +16,7 @@ docker tag hello-ruby:latest $IMAGE_REPO:v1
 docker push $IMAGE_REPO:v1
 
 
-# Create task definition
+echo "Creating hello-ruby  task definition"
 
 aws cloudformation create-stack --stack-name hello-ruby-task \
     --template-body file://infra/ecs/task.yaml \
