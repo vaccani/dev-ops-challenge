@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: container on ecs cluster for devops challenge
+Description: Task definition for devops challenge container on ecs
 
 Parameters:
   appName:

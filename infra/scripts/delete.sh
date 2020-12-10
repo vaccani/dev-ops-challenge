@@ -50,7 +50,6 @@ echo "Removing keypair"
 
 aws ec2 delete-key-pair --key-name leo-ssh-keypair
 
-set +e
-rm leo-ssh-keypair.pem -y
+yes | rm leo-ssh-keypair.pem
 
 echo "DONE"

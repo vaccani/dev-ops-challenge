@@ -71,7 +71,29 @@ open it in your web browser and check if the result are the spected
 
 ## Explanation
 
+On the first script “start.sh” we are setting up all the stuff to handle our deploy.
 
+
+
+We are creating the Vpc and subnets,
+role and policies for the task definition and ecs cluster, the
+
+
+ecs cluster, the rds database with postgresql engine and a bastion server who is in charge of the database import through a script on the cloudformation userdata tool.
+
+We don’t need to ssh into the bastion server but the ssh key is required for the creation so that .pem file is being created on the same start.sh script.
+
+
+On deploy.sh we are going to build the docker image and then, the creation of the ecr repo. Once we have the repo and the docker image tagged we are going to push it.
+
+The final step will be the creation of the task definition in which we have all the resources for our app to live:
+
+-Load balancer target group and listener rule
+-cloudwatch log group
+-Autoscaling service with cloudwatch cpu alarm and a max count of 10 instances scaling out if the cpu utilization is greater than 90% and scale in if it’s less than 70% and a minimum count of 1.
+
+
+# Versions:
 
 Docker version 19.03.13
 aws-cli/1.18.69
