@@ -58,7 +58,7 @@ Avoiding manual steps, patching and mantainging versions and dependencies.
 https://github.com/vaccani/dev-ops-challenge.git
 
 
-2- Run “make start” in the root of the git project
+2- Run “make start” from root of the git project
 
 3- Run “make deploy”
 
@@ -96,4 +96,5 @@ The final step will be the creation of the task definition in which we have all 
 # Versions:
 
 Docker version 19.03.13
+
 aws-cli/1.18.69
