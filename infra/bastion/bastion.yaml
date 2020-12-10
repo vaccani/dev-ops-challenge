@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Bastion Host By Scalematters
+Description: Bastion Host for devops challenge
 Parameters:
   Environment:
     Type: "String"
@@ -95,6 +95,7 @@ Resources:
           - logs:*
           - sts:*
           - s3:*
+          - rds:Describe*
           Resource: "*"
       Roles:
       - Ref: BastionIamRole
@@ -174,15 +175,38 @@ Resources:
           Content-Disposition: attachment; filename="userdata.txt"
 
           #!/bin/bash
-
+          
           sudo yum update -y && sudo yum upgrade -y
           sudo yum install make curl wget git jq telnet postgresql -y
+          
+          
+          cat <<"EOF" > /home/ec2-user/import_db.sh
+          #!/bin/sh
+          set -ex
 
+          #Set DB Environment Variables:
+
+          export DB_HOST=$(aws  rds describe-db-instances --region us-east-1 --output json | jq -r '.DBInstances[] | "\(.Endpoint.Address) " ' | grep "leo")
+          export DB_USER=admin1234
+          export DB_PORT=5432
+          export DB_NAME=hello_world
+          
           #Get database.sql file
 
-          aws s3 cp s3://challenge-leo-12345/database.sql ./
+          # sudo aws s3 cp s3://challenge-leo-12345/database.sql /home/ec2-user/
 
+          wget https://raw.githubusercontent.com/vaccani/dev-ops-challenge/dev/db/database.sql -P /home/ec2-user/
+          
+          
+          #Import database 
+          
+          export PGPASSWORD='admin1234';  psql -h $DB_HOST -U $DB_USER -p $DB_PORT -d $DB_NAME -f /home/ec2-user/database.sql
+          
+          EOF
 
+          sudo chmod +x /home/ec2-user/import_db.sh && sudo /home/ec2-user/import_db.sh
+          
+      #END of USERDATA
 
       Tags:
       - Key: Name

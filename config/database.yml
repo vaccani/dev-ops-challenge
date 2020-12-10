@@ -4,8 +4,8 @@ default: &default
   pool: 5
   host: <%= ENV["DB_HOST"] %>
   port: 5432
-  username: admin1234
-  password: admin1234
+  username: <%= ENV["DB_USER"] %>
+  password: <%= ENV["DB_PASSWD"] %>
 
 development:
   <<: *default
@@ -26,3 +26,4 @@ test:
   <<: *default
   adapter: postgresql
   database: hello_world
+             

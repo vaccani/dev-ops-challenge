@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: Database creation cloud AWSTemplateFormatVersion
+Description: RDS Database for devops challenge
 
 Parameters:
   Environment:
@@ -11,6 +11,8 @@ Parameters:
       - "dev"
       - "qa"
       - "prod"
+  DBName:
+    Type: String
   DBUsername:
     Description: 'The master postgres account.'
     Type: String
@@ -67,7 +69,6 @@ Resources:
         - Fn::ImportValue: leo-Subnet2
         - Fn::ImportValue: leo-Subnet3
 
-  #all other defaults will be in there
   DBParameterGroup:
     Type : AWS::RDS::DBParameterGroup
     Properties:
@@ -79,7 +80,7 @@ Resources:
   PostgresDB:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBName: hello_world
+      DBName: !Ref DBName
       DBInstanceIdentifier: !Sub "leo-${Environment}-pg-db"
       MasterUsername: !Ref DBUsername
       MasterUserPassword: !Ref DBUserPassword

@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: roles and policies for devops challenge
+Description: roles and policies for devops challenge ecs
 
 Resources:
 

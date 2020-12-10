@@ -22,5 +22,21 @@
   {
     "ParameterKey": "ContainerPort",
     "ParameterValue": "3000"
+  },
+  {
+    "ParameterKey": "Endpoint",
+    "ParameterValue": "/hello_world"
+  },
+  {
+    "ParameterKey": "dbUser",
+    "ParameterValue": "admin1234"
+  },
+  {
+    "ParameterKey": "dbPwd",
+    "ParameterValue": "admin1234"
+  },
+  {
+    "ParameterKey": "dbName",
+    "ParameterValue": "hello_world"
   }
 ]

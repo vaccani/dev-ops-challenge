@@ -14,12 +14,14 @@ Parameters:
     Type: Number
   ContainerPort:
     Type: Number
-  # dbUser:
-  #   Type: String
-  # dbPwd:
-  #   Type: String
-  # dbName:
-  #   Type: String
+  Endpoint:
+    Type: String
+  dbUser:
+    Type: String
+  dbPwd:
+    Type: String
+  dbName:
+    Type: String
 
 Resources:
   
@@ -41,12 +43,12 @@ Resources:
           Cpu: !Ref Cpu
           Memory: !Ref Memory
           Environment:
-          #   - Name: DB_USER
-          #     Value: !Ref dbUser
-          #   - Name: DB_PASSWD
-          #     Value: !Ref dbPwd
-          #   - Name: DB_NAME
-          #     Value: !Ref dbName
+              - Name: DB_USER
+                Value: !Ref dbUser
+              - Name: DB_PASSWD
+                Value: !Ref dbPwd
+              - Name: DB_NAME
+                Value: !Ref dbName
               - Name: DB_HOST
                 Value: !ImportValue hello-rds-Endpoint
           
@@ -99,7 +101,7 @@ Resources:
       Matcher:
         HttpCode: 200-299
       HealthCheckIntervalSeconds: 10
-      HealthCheckPath: /hello_world
+      HealthCheckPath: !Ref Endpoint
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 10
@@ -113,7 +115,7 @@ Resources:
       Conditions:
         - Field: path-pattern
           Values:
-            - /hello_world
+            - !Ref Endpoint
       Actions:
         - TargetGroupArn: !Ref TargetGroup
           Type: forward
@@ -213,6 +215,6 @@ Outputs:
 
   ApiEndpoint:
     Description: Hello World Endpoint
-    Value: !Join ['', ['http://', !ImportValue DomainName, '/hello_world']]
+    Value: !Join ['', ['http://', !ImportValue DomainName, !Ref Endpoint]]
     Export:
-      Name: 'HelloWorldEndpoint'
+      Name: !Join ['-', [!Ref appName, "Endpoint"]]

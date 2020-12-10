@@ -4,6 +4,10 @@
       "ParameterValue": "dev"
     },
     {
+      "ParameterKey": "DBName",
+      "ParameterValue": "hello_world"
+    },
+    {
       "ParameterKey": "DBAllocatedStorage",
       "ParameterValue": "50"
     },

@@ -40,3 +40,38 @@ db name: hello_world
 
 Is everithing is ok the route /hello_world will return the following respose:
 {"id":1,"text":"Hello World!"}
+
+
+## Answer:
+
+The reason why I took the blue pill is quite simple:
+
+With Fargate we can forget about managing servers and focus on the configuration and the behavior of our containers. 
+Taking advantage of the task definitions and autoscaling policies and with a real usage of the infrastructure as a code concept.
+Avoiding manual steps, patching and mantainging versions and dependencies. 
+
+
+## Usage:
+
+1-Clone the repo:
+
+https://github.com/vaccani/dev-ops-challenge.git
+
+
+2- Run “make start” in the root of the git project
+
+3- Run “make deploy”
+
+At the end of the script, if everything went well, the api endpoint should be shown on your terminal.
+
+open it in your web browser and check if the result are the spected
+
+4- Once you have finished testing the stack, you can delete all the resources created for the challenge running: “make teardown”
+
+
+## Explanation
+
+
+
+Docker version 19.03.13
+aws-cli/1.18.69

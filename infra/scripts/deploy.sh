@@ -23,3 +23,8 @@ aws cloudformation create-stack --stack-name hello-ruby-task \
     --parameters file://infra/ecs/hello-world-task.json
 
 aws cloudformation wait stack-create-complete --stack-name hello-ruby-task
+
+
+API_ENDPOINT=$(aws cloudformation list-exports | grep -io 'http://ecs-services.*[.hello_world]')
+
+echo "Your Api endpoint is $API_ENDPOINT, try it out in your web browser"

@@ -35,26 +35,24 @@ aws cloudformation create-stack --stack-name hello-rds \
 
 aws cloudformation wait stack-create-complete --stack-name hello-rds
 
-# Get db endpoint
 
-# export db_endpoint=$(aws  rds describe-db-instances --output json | jq -r '.DBInstances[] | "\(.Endpoint.Address) " ' | grep "leo")
+#Note:
+# In order to import database from bastion we have two ways to get the database.sql file
+# Creating an s3 running bucket and uploading the file on this script and then downloading from the bastion userdata script
+# Or running an wget from bastion userdata script.
+#In this case we are using wget since it takes too long to delete the s3 bucket and we need to test several times this pipeline
 
-# sed -i "s/\$db_endpoint/$db_endpoint/g" config/database.yml
+#If we want to go with the s3 solution, we can uncomment the next lines and do the same on bastion cloudformation on line 196:
 
+# echo "Creating s3 bucket and uploading database.sql file"
 
-echo "Creating s3 bucket and uploading database.sql file"
+# aws s3api create-bucket --bucket challenge-leo-12345 --region us-east-1
 
-aws s3api create-bucket --bucket challenge-leo-12345 --region us-east-1
-
-aws s3 cp db/database.sql s3://challenge-leo-12345/
+# aws s3 cp db/database.sql s3://challenge-leo-12345/
 
 echo "Creating Bastion ec2 instance"
 
-echo "Keypair "leo-ssh-keypair.pem" must be created before on your account"
-
-# if you have the proper rights you can use the command: 
-# 
-# aws lightsail create-key-pair --key-pair-name leo-ssh-keypair.pem
+aws ec2 create-key-pair --key-name leo-ssh-keypair --query 'KeyMaterial' --output text > leo-ssh-keypair.pem && chmod 400 leo-ssh-keypair.pem
 
 aws cloudformation create-stack --stack-name leo-dev-bastion \
     --template-body file://infra/bastion/bastion.yaml \
