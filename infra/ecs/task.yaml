@@ -1,0 +1,220 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Task definition for devops challenge container on ecs
+
+Parameters:
+  appName:
+    Type: String
+  Cpu:
+    Type: Number
+  Memory:
+    Type: Number
+  MaxCount:
+    Type: Number
+  DesiredCount:
+    Type: Number
+  ContainerPort:
+    Type: Number
+  Endpoint:
+    Type: String
+  dbUser:
+    Type: String
+  dbPwd:
+    Type: String
+  dbName:
+    Type: String
+
+Resources:
+  
+  Task:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref appName
+      Cpu: !Ref Cpu
+      Memory: !Ref Memory
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !ImportValue ECSTaskExecutionRole
+      ContainerDefinitions:
+        - Name: !Ref appName
+          Image: 
+            !Join ["", [ !Ref "AWS::AccountId", ".dkr.ecr.", !Ref "AWS::Region", ".amazonaws.com/", !Ref "appName", ":v1"]]
+
+          Cpu: !Ref Cpu
+          Memory: !Ref Memory
+          Environment:
+              - Name: DB_USER
+                Value: !Ref dbUser
+              - Name: DB_PASSWD
+                Value: !Ref dbPwd
+              - Name: DB_NAME
+                Value: !Ref dbName
+              - Name: DB_HOST
+                Value: !ImportValue hello-rds-Endpoint
+          
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+              Protocol: tcp
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: 'apis'
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Ref appName
+ 
+
+  Service:
+    Type: AWS::ECS::Service
+    DependsOn: ListenerRule
+    Properties:
+      ServiceName: !Ref appName
+      TaskDefinition: !Ref Task
+      Cluster: !ImportValue 'ECSCluster'
+      LaunchType: FARGATE
+      DesiredCount: !Ref DesiredCount
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 70
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets:
+            - !ImportValue leo-Subnet1
+            - !ImportValue leo-Subnet2
+          SecurityGroups:
+            - !ImportValue ContainerSecurityGroup
+            - !ImportValue hello-rds-DBSecurityGroup
+      LoadBalancers:
+        - ContainerName: !Ref appName
+          ContainerPort: !Ref ContainerPort
+          TargetGroupArn: !Ref TargetGroup
+
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name:
+        !Join ["-", [ !Ref "appName", "tg"]]
+      VpcId: !ImportValue leo-VPC
+      Port: 80
+      Protocol: HTTP
+      Matcher:
+        HttpCode: 200-299
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: !Ref Endpoint
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 10
+      TargetType: ip
+
+  ListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !ImportValue Listener
+      Priority: 2
+      Conditions:
+        - Field: path-pattern
+          Values:
+            - !Ref Endpoint
+      Actions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+
+  CloudWatchLogsGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Ref AWS::StackName
+      RetentionInDays: 365
+
+  # Autoscaling
+
+  ServiceScalableTarget:
+    Type: "AWS::ApplicationAutoScaling::ScalableTarget"
+    Properties:
+      MaxCapacity: !Ref MaxCount
+      MinCapacity: !Ref DesiredCount
+      ResourceId: !Join
+        - /
+        - - service
+          - !ImportValue 'ECSCluster'
+          - !GetAtt Service.Name
+      RoleARN: !ImportValue ECSTaskExecutionRole
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+
+  ServiceScaleOutPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: ServiceScaleOutPolicy
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref ServiceScalableTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 1800
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalLowerBound: 0
+            ScalingAdjustment: 1
+
+  ServiceScaleInPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    Properties:
+      PolicyName: ServiceScaleInPolicy
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref ServiceScalableTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 1800
+        MetricAggregationType: Average
+        StepAdjustments:
+          - MetricIntervalUpperBound: 0
+            ScalingAdjustment: -1
+
+  CPUScaleOutAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: CPU utilization greater than 90%
+      AlarmDescription: Alarm if cpu utilization greater than 90% of reserved cpu
+      Namespace: AWS/ECS
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: ClusterName
+          Value: !ImportValue 'ECSCluster'
+        - Name: ServiceName
+          Value: !GetAtt Service.Name
+      Statistic: Maximum
+      Period: "60"
+      EvaluationPeriods: "3"
+      Threshold: "90"
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref ServiceScaleOutPolicy
+
+  CPUScaleInAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: CPU utilization less than 70%
+      AlarmDescription: Alarm if cpu utilization greater than 70% of reserved cpu
+      Namespace: AWS/ECS
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: ClusterName
+          Value: !ImportValue 'ECSCluster'
+        - Name: ServiceName
+          Value: !GetAtt Service.Name
+      Statistic: Maximum
+      Period: "60"
+      EvaluationPeriods: "10"
+      Threshold: "70"
+      ComparisonOperator: LessThanThreshold
+      AlarmActions:
+        - !Ref ServiceScaleInPolicy
+
+
+Outputs:
+
+  ApiEndpoint:
+    Description: Hello World Endpoint
+    Value: !Join ['', ['http://', !ImportValue DomainName, !Ref Endpoint]]
+    Export:
+      Name: !Join ['-', [!Ref appName, "Endpoint"]]

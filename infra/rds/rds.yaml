@@ -1,0 +1,134 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: RDS Database for devops challenge
+
+Parameters:
+  Environment:
+    Type: "String"
+    Description: Initializing a variable to use upon CFN execution
+    ConstraintDescription: "Invalid environment name. Try dev, qa, or prod."
+    AllowedValues:
+      - "dev"
+      - "qa"
+      - "prod"
+  DBName:
+    Type: String
+  DBUsername:
+    Description: 'The master postgres account.'
+    Type: String
+  DBUserPassword:
+    Description: 'The master password for the DB instance (ignored when DBSnapshotIdentifier is set, value used from snapshot).'
+    Type: String
+    NoEcho: true  #To not expose password on echo or logs
+  PreferredMaintenanceWindow:
+    Description: The weekly time range (in UTC) during which system maintenance can occur.
+    Type: String
+    Default: 'sat:07:00-sat:07:30'
+  PreferredBackupWindow:
+    Description: 'The daily time range in UTC during which you want to create automated backups.'
+    Type: String
+    Default: '23:00-23:59'
+  DBBackupRetentionPeriod:
+    Description: 'The backup retention period.'
+    Type: Number
+    Default: 14
+  DBClass:
+    Type: String
+  DBAllocatedStorage:
+    Type: Number
+  DBMultiAZ:
+    Type: String  # for prod, we want this to be TRUE!!
+  EngineVersion:
+    Type: String  
+
+Resources:
+  # security group for the database
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription : 'db security group'
+      VpcId: 
+        Fn::ImportValue: "leo-VPC"
+      SecurityGroupIngress:
+      - IpProtocol: "tcp"
+        FromPort: 5432
+        ToPort: 5432
+        CidrIp: 10.42.0.0/16
+        Description: "Postgres DB"
+      Tags:
+      - Key: Name
+        Value: !Sub ${Environment} DBSecurityGroup
+
+  
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription : 'DB private subnets'
+      SubnetIds :
+        - Fn::ImportValue: leo-Subnet1
+        - Fn::ImportValue: leo-Subnet2
+        - Fn::ImportValue: leo-Subnet3
+
+  DBParameterGroup:
+    Type : AWS::RDS::DBParameterGroup
+    Properties:
+      Description: 'Postgres 11 db paramter group'
+      Family : postgres11
+      Parameters:
+        shared_preload_libraries : pg_stat_statements
+  
+  PostgresDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBName: !Ref DBName
+      DBInstanceIdentifier: !Sub "leo-${Environment}-pg-db"
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBUserPassword
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups: 
+        - !Ref DBSecurityGroup
+      DBParameterGroupName: !Ref DBParameterGroup
+      DBInstanceClass: !Ref DBClass
+      AllocatedStorage: !Ref DBAllocatedStorage
+      MultiAZ: !Ref DBMultiAZ
+      Engine: "postgres"
+      EngineVersion: !Ref EngineVersion
+      StorageType: gp2
+      PreferredBackupWindow: !Ref PreferredBackupWindow
+      PreferredMaintenanceWindow: !Ref PreferredMaintenanceWindow
+      CopyTagsToSnapshot: true
+      BackupRetentionPeriod: !Ref DBBackupRetentionPeriod
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: true
+      EnablePerformanceInsights : true
+      #StorageEncrypted -- not used right now
+      #DBSnapshotIdentifier to restore from a snapshot
+      Tags:
+        - Key: Name
+          Value: !Sub "leo-${Environment}-pg-db"
+
+#If we want RDS autosacling, it does exist, but not through cloudformation.   Keep a lookout for it
+#https://github.com/aws-cloudformation/aws-cloudformation-coverage-roadmap/issues/72
+
+Outputs :
+  DBSecurityGroup:
+    Description: Security Group to Allow Remote Access to RDS
+    Value: !Ref DBSecurityGroup
+    Export:
+      Name: !Sub "${AWS::StackName}-DBSecurityGroup" 
+  JDBCConnectionString:
+    Description : "JDBC connection string for database"
+    "Value" : !Join  
+                    - ""
+                    - - "jdbc:postgresql://"
+                      - !GetAtt  PostgresDB.Endpoint.Address 
+                      - ":"
+                      - !GetAtt  PostgresDB.Endpoint.Port 
+                      - "/hello_world"
+    Export:
+      Name: !Sub "${AWS::StackName}-JDBC"
+  DBEndpoint:
+    Description: RDS Endpoint
+    Value: !GetAtt  PostgresDB.Endpoint.Address
+    Export:
+      Name: !Sub "${AWS::StackName}-Endpoint"
