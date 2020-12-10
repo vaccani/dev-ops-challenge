@@ -38,11 +38,11 @@ aws cloudformation wait stack-create-complete --stack-name hello-rds
 
 #Note:
 # In order to import database from bastion we have two ways to get the database.sql file
-# Creating an s3 running bucket and uploading the file on this script and then downloading from the bastion userdata script
-# Or running an wget from bastion userdata script.
-#In this case we are using wget since it takes too long to delete the s3 bucket and we need to test several times this pipeline
+# Creating an "s3 bucket" and uploading the file on this script and then downloading from the bastion userdata script
+# Or running a "wget" from bastion userdata script.
+#In this case we are using "wget" since it takes too long to delete the "s3 bucket" and we need to test this pipeline several times 
 
-#If we want to go with the s3 solution, we can uncomment the next lines and do the same on bastion cloudformation on line 196:
+#If we want to go with the s3 solution, we can uncomment the next lines and do the same on bastion cloudformation on line 196 and also in delete.sh lines 45 to 47 :
 
 # echo "Creating s3 bucket and uploading database.sql file"
 
